@@ -4,7 +4,7 @@ import { env } from '../utils/env';
 import { logger } from '../utils/logger';
 import { emailService } from '../services/email.service';
 import { prisma } from '../db/prisma';
-import type { EmailJob } from './email.queue';
+import type { EmailJob } from '../queues/email.queue';
 
 const redis = {
   host: new URL(env.redis.url).hostname || 'localhost',

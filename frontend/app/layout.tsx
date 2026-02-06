@@ -6,6 +6,8 @@ export const metadata: Metadata = {
   description: 'Schedule and manage your emails efficiently',
 };
 
+import { AuthProvider } from '../context/auth-context';
+
 export default function RootLayout({
   children,
 }: {
@@ -14,7 +16,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-gray-50">
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

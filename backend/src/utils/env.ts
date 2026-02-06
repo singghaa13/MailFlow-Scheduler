@@ -8,6 +8,13 @@ export const env = {
   },
   redis: {
     url: process.env.REDIS_URL || 'redis://localhost:6379',
+    host: process.env.REDIS_HOST || 'localhost',
+    port: parseInt(process.env.REDIS_PORT || '6379', 10),
+    password: process.env.REDIS_PASSWORD || undefined,
+  },
+  jwt: {
+    secret: process.env.JWT_SECRET || 'super-secret-key',
+    expiresIn: process.env.JWT_EXPIRES_IN || '1d',
   },
   server: {
     port: parseInt(process.env.PORT || '3000', 10),

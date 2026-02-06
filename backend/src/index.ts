@@ -4,8 +4,13 @@ import { logger } from './utils/logger';
 import { emailWorker } from './workers/email.worker';
 import { rateLimiterService } from './services/rateLimiter.service';
 import { emailService } from './services/email.service';
+import { SocketService } from './services/socket.service';
+import { QueueListenerService } from './services/queue-listener.service';
+import { createServer } from 'http';
 
-let server: ReturnType<typeof app.listen>;
+// Create HTTP server from Express app
+const httpServer = createServer(app);
+let server: ReturnType<typeof httpServer.listen>;
 
 async function start(): Promise<void> {
   try {
@@ -16,8 +21,12 @@ async function start(): Promise<void> {
     await emailService.verifyConnection();
     await emailWorker.start();
 
-    // Start Express server
-    server = app.listen(env.server.port, () => {
+    // Initialize Socket.IO
+    const socketService = new SocketService(httpServer);
+    new QueueListenerService(socketService);
+
+    // Start HTTP server
+    server = httpServer.listen(env.server.port, () => {
       logger.info('Server started successfully', {
         port: env.server.port,
         nodeEnv: env.server.nodeEnv,

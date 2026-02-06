@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react';
 import { Header } from '@/components/Header';
 import { EmailTable } from '@/components/EmailTable';
-import { getQueueStats } from '@/lib/api';
+import { getQueueStats, getEmails } from '@/lib/api';
+import { initializeSocket, disconnectSocket } from '@/config/socket';
+import { useAuth } from '@/context/auth-context';
 
 interface QueueStats {
   waiting: number;
@@ -14,27 +16,50 @@ interface QueueStats {
 }
 
 export default function Dashboard(): React.ReactElement {
+  const { token } = useAuth();
   const [stats, setStats] = useState<QueueStats | null>(null);
+  const [emails, setEmails] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const fetchData = async (): Promise<void> => {
+    try {
+      const [statsData, emailsData] = await Promise.all([
+        getQueueStats(),
+        getEmails({ limit: 10 })
+      ]);
+      setStats(statsData);
+      setEmails(emailsData.emails);
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    // TODO: Implement polling or WebSocket for real-time stats
-    const fetchStats = async (): Promise<void> => {
-      try {
-        const data = await getQueueStats();
-        setStats(data);
-      } catch (error) {
-        console.error('Failed to fetch stats:', error);
-      } finally {
-        setLoading(false);
-      }
+    fetchData();
+    const interval = setInterval(fetchData, 30000); // Polling as backup
+
+    // Initialize Socket
+    if (token) {
+      const socket = initializeSocket(token);
+
+      socket.on('job-completed', (data) => {
+        console.log('Job completed:', data);
+        fetchData(); // Refresh data on event
+      });
+
+      socket.on('job-failed', (data) => {
+        console.log('Job failed:', data);
+        fetchData(); // Refresh data on event
+      });
+    }
+
+    return () => {
+      clearInterval(interval);
+      disconnectSocket();
     };
-
-    fetchStats();
-    const interval = setInterval(fetchStats, 5000);
-
-    return () => clearInterval(interval);
-  }, []);
+  }, [token]);
 
   return (
     <>
@@ -73,8 +98,7 @@ export default function Dashboard(): React.ReactElement {
             <h2 className="text-lg font-semibold text-gray-900">Recent Emails</h2>
           </div>
           <div className="p-6">
-            {/* TODO: Implement email list fetching and display */}
-            <EmailTable emails={[]} loading={loading} />
+            <EmailTable emails={emails} loading={loading} />
           </div>
         </div>
       </main>

@@ -1,0 +1,10 @@
+
+> mailflow-scheduler-backend@1.0.0 build
+> tsc
+
+src/api/email.routes.ts(97,26): error TS2349: This expression is not callable.
+  No constituent of type 'number | object' is callable.
+src/controllers/auth.controller.ts(4,24): error TS2307: Cannot find module '../db/client' or its corresponding type declarations.
+src/middleware/auth.middleware.ts(3,24): error TS2307: Cannot find module '../db/client' or its corresponding type declarations.
+src/queues/email.queue.ts(61,37): error TS2339: Property 'getCountsPerStatus' does not exist on type 'Queue<EmailJob, any, string>'.
+src/workers/email.worker.ts(7,31): error TS2307: Cannot find module './email.queue' or its corresponding type declarations.

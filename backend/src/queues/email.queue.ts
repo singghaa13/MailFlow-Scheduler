@@ -58,7 +58,7 @@ export async function getQueueStats(): Promise<{
   delayed: number;
 }> {
   try {
-    const counts = await emailQueue.getCountsPerStatus(
+    const counts = await emailQueue.getJobCounts(
       'wait',
       'active',
       'completed',

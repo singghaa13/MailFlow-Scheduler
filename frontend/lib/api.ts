@@ -5,8 +5,27 @@ const apiClient = axios.create({
   timeout: 10000,
 });
 
-// TODO: Add JWT token to requests interceptor
-// TODO: Add error handling interceptor
+// Request interceptor to add auth token
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Response interceptor for error handling
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Optional: Redirect to login or clear token if 401
+      // localStorage.removeItem('token');
+      // window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
 
 interface ScheduleEmailParams {
   to: string;
@@ -18,6 +37,24 @@ interface ScheduleEmailParams {
 
 export async function scheduleEmail(params: ScheduleEmailParams): Promise<{ success: boolean; jobId: string }> {
   const response = await apiClient.post('/email/schedule', params);
+  return response.data;
+}
+
+interface GetEmailsParams {
+  page?: number;
+  limit?: number;
+}
+
+export async function getEmails(params: GetEmailsParams = {}): Promise<{
+  emails: any[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  };
+}> {
+  const response = await apiClient.get('/email', { params });
   return response.data;
 }
 

@@ -1,11 +1,14 @@
 import express, { Router, Request, Response } from 'express';
 import { logger } from '../utils/logger';
+import * as authController from '../controllers/auth.controller';
+import { authenticate } from '../middleware/auth.middleware';
 
 const router = Router();
 
-// TODO: Implement JWT token validation middleware
-// TODO: Implement user registration endpoint
-// TODO: Implement user login endpoint
+// Auth routes
+router.post('/register', authController.register);
+router.post('/login', authController.login);
+router.get('/me', authenticate, authController.me);
 
 // Health check for auth service
 router.get('/health', async (req: Request, res: Response): Promise<void> => {
