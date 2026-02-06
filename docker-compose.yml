@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mailflow_postgres
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mailflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mailflow
+
+  redis:
+    image: redis:7-alpine
+    container_name: mailflow_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mailflow
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mailflow_backend
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://user:password@postgres:5432/mailflow
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: development
+      PORT: 3000
+      SMTP_HOST: smtp.ethereal.email
+      SMTP_PORT: 587
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - mailflow
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: mailflow_frontend
+    ports:
+      - "3001:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3000/api
+    depends_on:
+      - backend
+    networks:
+      - mailflow
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  mailflow:
+    driver: bridge
