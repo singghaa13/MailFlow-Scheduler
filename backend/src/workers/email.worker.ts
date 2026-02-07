@@ -1,44 +1,29 @@
 import { Worker, Job } from 'bullmq';
-import { createClient } from 'redis';
+import IORedis from 'ioredis';
 import { env } from '../utils/env';
 import { logger } from '../utils/logger';
 import { emailService } from '../services/email.service';
 import { prisma } from '../db/prisma';
 import type { EmailJob } from '../queues/email.queue';
 
-let redis: { host: string; port: number; password?: string };
+const connection = new IORedis(env.redis.url, {
+  maxRetriesPerRequest: null,
+});
 
-try {
-  const redisUrl = new URL(env.redis.url);
-  // Extract password from URL (format: redis://username:password@host:port)
-  const password = redisUrl.password || env.redis.password;
-  redis = {
-    host: redisUrl.hostname,
-    port: parseInt(redisUrl.port),
-    password: password,
-  };
-  logger.info('Redis config for BullMQ worker', {
-    url: env.redis.url.replace(/:([^:@]+)@/, ':****@'), // Mask password in logs
-    host: redis.host,
-    port: redis.port,
-    hasPassword: !!redis.password
-  });
-} catch (error) {
-  // Fallback to individual env variables if URL parsing fails
-  logger.error('Failed to parse REDIS_URL, using fallback', { error });
-  redis = {
-    host: env.redis.host || 'localhost',
-    port: env.redis.port || 6379,
-    password: env.redis.password,
-  };
-}
+connection.on('error', (err) => {
+  logger.error('Redis connection error in EmailWorker:', { error: err.message });
+});
+
+connection.on('connect', () => {
+  logger.info('EmailWorker connected to Redis');
+});
 
 export class EmailWorker {
   private worker: Worker<EmailJob>;
 
   constructor() {
     this.worker = new Worker<EmailJob>(env.bullMq.queueName, this.process.bind(this), {
-      connection: redis,
+      connection,
       concurrency: env.bullMq.concurrency,
     });
 
