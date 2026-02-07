@@ -1,14 +1,18 @@
 import express from 'express';
+import cors from 'cors';
 import { env } from './utils/env';
 import { logger } from './utils/logger';
 import { emailRoutes } from './api/email.routes';
 import { authRoutes } from './api/auth.routes';
 import { rateLimiterService } from './services/rateLimiter.service';
+import { passport } from './config/passport';
 
 const app = express();
 
 // Middleware
+app.use(cors());
 app.use(express.json());
+app.use(passport.initialize());
 
 // Routes
 app.use('/api/email', emailRoutes);

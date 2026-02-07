@@ -14,3 +14,7 @@ coverage/
 .vscode/settings.json
 .idea/
 *.iml
+# build / debug logs
+*_log.txt
+build_log.txt
+build_log_frontend.txt

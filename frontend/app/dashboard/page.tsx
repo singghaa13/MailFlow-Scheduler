@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Header } from '@/components/Header';
-import { EmailTable } from '@/components/EmailTable';
-import { getQueueStats, getEmails } from '@/lib/api';
+import { getQueueStats, getEmails, toggleStar } from '@/lib/api';
 import { initializeSocket, disconnectSocket } from '@/config/socket';
 import { useAuth } from '@/context/auth-context';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Star, Clock, CheckCircle } from 'lucide-react';
 
 interface QueueStats {
   waiting: number;
@@ -16,19 +16,35 @@ interface QueueStats {
 }
 
 export default function Dashboard(): React.ReactElement {
-  const { token } = useAuth();
-  const [stats, setStats] = useState<QueueStats | null>(null);
+  const { token, loading: authLoading } = useAuth();
   const [emails, setEmails] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const activeTab = searchParams.get('view') || 'scheduled';
+  const searchQuery = searchParams.get('search') || '';
+
+  useEffect(() => {
+    if (!authLoading && !token) {
+      router.push('/login');
+    }
+  }, [token, authLoading, router]);
 
   const fetchData = async (): Promise<void> => {
+    setLoading(true);
     try {
-      const [statsData, emailsData] = await Promise.all([
+      const [, emailsData] = await Promise.all([
         getQueueStats(),
-        getEmails({ limit: 10 })
+        getEmails({
+          limit: 50,
+          status: activeTab === 'scheduled' ? 'pending' : activeTab === 'sent' ? 'sent' : 'completed',
+          search: searchQuery || undefined
+        })
       ]);
-      setStats(statsData);
+      // setStats(statsData); // Stats not used in this view design
       setEmails(emailsData.emails);
+
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
     } finally {
@@ -37,71 +53,95 @@ export default function Dashboard(): React.ReactElement {
   };
 
   useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 30000); // Polling as backup
+    if (token) {
+      fetchData();
+    }
+  }, [activeTab, searchQuery, token]);
 
-    // Initialize Socket
+  useEffect(() => {
+    const interval = setInterval(fetchData, 30000);
     if (token) {
       const socket = initializeSocket(token);
-
-      socket.on('job-completed', (data) => {
-        console.log('Job completed:', data);
-        fetchData(); // Refresh data on event
-      });
-
-      socket.on('job-failed', (data) => {
-        console.log('Job failed:', data);
-        fetchData(); // Refresh data on event
-      });
+      socket.on('job-completed', fetchData);
+      socket.on('job-failed', fetchData);
     }
-
     return () => {
       clearInterval(interval);
       disconnectSocket();
     };
-  }, [token]);
+  }, [token, activeTab]);
+
+  const handleStarToggle = async (emailId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent navigation to email detail
+    try {
+      const result = await toggleStar(emailId);
+      // Update local state optimistically
+      setEmails(prevEmails =>
+        prevEmails.map(email =>
+          email.id === emailId ? { ...email, isStarred: result.isStarred } : email
+        )
+      );
+    } catch (error) {
+      console.error('Failed to toggle star:', error);
+    }
+  };
 
   return (
-    <>
-      <Header title="Dashboard" />
-
-      <main className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
-        {/* Queue Stats */}
-        {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
-            <div className="bg-white p-6 rounded-lg shadow">
-              <p className="text-sm text-gray-600">Waiting</p>
-              <p className="text-3xl font-bold text-yellow-600">{stats.waiting}</p>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow">
-              <p className="text-sm text-gray-600">Active</p>
-              <p className="text-3xl font-bold text-blue-600">{stats.active}</p>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow">
-              <p className="text-sm text-gray-600">Completed</p>
-              <p className="text-3xl font-bold text-green-600">{stats.completed}</p>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow">
-              <p className="text-sm text-gray-600">Failed</p>
-              <p className="text-3xl font-bold text-red-600">{stats.failed}</p>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow">
-              <p className="text-sm text-gray-600">Delayed</p>
-              <p className="text-3xl font-bold text-purple-600">{stats.delayed}</p>
-            </div>
-          </div>
-        )}
-
-        {/* Recent Emails */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="px-6 py-4 border-b">
-            <h2 className="text-lg font-semibold text-gray-900">Recent Emails</h2>
-          </div>
-          <div className="p-6">
-            <EmailTable emails={emails} loading={loading} />
-          </div>
+    <div className="bg-white rounded-lg">
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
         </div>
-      </main>
-    </>
+      ) : emails.length === 0 ? (
+        <div className="text-center py-24">
+          <div className="bg-gray-50 rounded-full h-20 w-20 flex items-center justify-center mx-auto mb-4">
+            <span className="text-3xl">📭</span>
+          </div>
+          <h3 className="text-lg font-medium text-gray-900">No {activeTab} emails</h3>
+          <p className="text-gray-500 mt-1">You're all caught up!</p>
+        </div>
+      ) : (
+        <div className="divide-y divide-gray-100">
+          {emails.map((email) => (
+            <div
+              key={email.id}
+              onClick={() => router.push(`/dashboard/emails/${email.id}`)}
+              className="group flex items-center justify-between py-4 px-2 hover:bg-gray-50 transition-colors cursor-pointer"
+            >
+              <div className="flex items-center gap-4 flex-1 min-w-0">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-3 mb-1">
+                    <span className="font-semibold text-gray-900 text-sm truncate w-48">
+                      To: {email.to}
+                    </span>
+
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border
+                                        ${activeTab === 'scheduled' ? 'bg-orange-50 text-orange-700 border-orange-100' : 'bg-gray-100 text-gray-600 border-gray-200'}`}>
+                      {activeTab === 'scheduled' ? <Clock size={12} className="mr-1" /> : <CheckCircle size={12} className="mr-1" />}
+                      {new Date(email.scheduledAt || email.createdAt).toLocaleString()}
+                    </span>
+                  </div>
+
+                  <p className="text-sm text-gray-600 truncate flex items-center gap-2">
+                    <span className="font-medium text-gray-900">{email.subject}</span>
+                    <span className="text-gray-400">-</span>
+                    <span className="text-gray-500 truncate">{email.body.substring(0, 60)}...</span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4 pl-4">
+                <button
+                  onClick={(e) => handleStarToggle(email.id, e)}
+                  className={`transition-colors ${email.isStarred ? 'text-yellow-400' : 'text-gray-300 hover:text-yellow-400'}`}
+                >
+                  <Star size={18} fill={email.isStarred ? 'currentColor' : 'none'} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

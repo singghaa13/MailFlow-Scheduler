@@ -14,10 +14,13 @@ model User {
   id        String     @id @default(cuid())
   email     String     @unique
   name      String?
-  password  String
+  password  String?
+  googleId  String?    @unique
+  avatar    String?    // URL to profile picture
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
   emails    Email[]
+  templates Template[]
 }
 
 model Email {
@@ -32,10 +35,25 @@ model Email {
   jobId       String?  @unique
   scheduledAt DateTime
   sentAt      DateTime?
+  isStarred   Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([userId])
   @@index([status])
   @@index([scheduledAt])
+}
+
+model Template {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  name      String
+  subject   String
+  body      String
+  html      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }

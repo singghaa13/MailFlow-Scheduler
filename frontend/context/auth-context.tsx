@@ -8,6 +8,8 @@ interface User {
     id: string;
     email: string;
     name?: string;
+    avatar?: string;
+    googleId?: string;
 }
 
 interface AuthContextType {
@@ -16,6 +18,7 @@ interface AuthContextType {
     loading: boolean;
     login: (token: string, user: User) => void;
     logout: () => void;
+    refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -64,8 +67,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         router.push('/login');
     };
 
+    const refreshUser = async () => {
+        const storedToken = localStorage.getItem('token');
+        if (storedToken) {
+            try {
+                const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'}/auth/me`, {
+                    headers: { Authorization: `Bearer ${storedToken}` },
+                });
+                setUser(response.data.user);
+            } catch (error) {
+                console.error('Failed to refresh user:', error);
+            }
+        }
+    };
+
     return (
-        <AuthContext.Provider value={{ user, token, loading, login, logout }}>
+        <AuthContext.Provider value={{ user, token, loading, login, logout, refreshUser }}>
             {children}
         </AuthContext.Provider>
     );

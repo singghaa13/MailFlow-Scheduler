@@ -1,5 +1,5 @@
-import express, { Router } from 'express';
-import * as emailController from '../controllers/email.controller';
+import { Router } from 'express';
+import { scheduleEmail, getEmails, getQueueStats, getJobStatus, batchScheduleEmail, toggleStar, getEmailById } from '../controllers/email.controller';
 import { authenticate } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -8,9 +8,12 @@ const router = Router();
 router.use(authenticate);
 
 // Routes
-router.post('/schedule', emailController.scheduleEmail);
-router.get('/', emailController.getEmails);
-router.get('/stats', emailController.getQueueStats);
-router.get('/job/:jobId', emailController.getJobStatus);
+router.post('/schedule', scheduleEmail);
+router.post('/batch-schedule', batchScheduleEmail);
+router.get('/', getEmails);
+router.get('/stats', getQueueStats);
+router.get('/job/:jobId', getJobStatus);
+router.get('/:id', getEmailById);  // Get single email by ID
+router.put('/:id/star', toggleStar);
 
 export const emailRoutes = router;

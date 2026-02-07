@@ -30,7 +30,7 @@ export class EmailWorker {
     });
 
     try {
-      // TODO: Implement email sending logic and database updates
+      // Implement email sending logic
       await emailService.sendEmail({
         to: job.data.to,
         subject: job.data.subject,
@@ -39,11 +39,20 @@ export class EmailWorker {
       });
 
       // Update job status in database
-      // TODO: Implement database update for job status
+      await prisma.email.update({
+        where: { id: job.data.id },
+        data: { status: 'sent', sentAt: new Date() },
+      });
+
       logger.info('Email job completed successfully', {
         jobId: job.id,
       });
     } catch (error) {
+      await prisma.email.update({
+        where: { id: job.data.id },
+        data: { status: 'failed' },
+      });
+
       logger.error('Email job processing failed', {
         jobId: job.id,
         error: error instanceof Error ? error.message : 'Unknown error',

@@ -96,16 +96,35 @@ export const getEmails = async (req: Request, res: Response): Promise<void> => {
 
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 10;
+        const status = req.query.status as string;
+        const search = req.query.search as string;
         const skip = (page - 1) * limit;
+
+        const where: any = { userId };
+
+        if (status && status !== 'all') {
+            if (status === 'starred') {
+                where.isStarred = true;
+            } else {
+                where.status = status;
+            }
+        }
+
+        if (search) {
+            where.OR = [
+                { subject: { contains: search, mode: 'insensitive' } },
+                { to: { contains: search, mode: 'insensitive' } },
+            ];
+        }
 
         const [emails, total] = await Promise.all([
             prisma.email.findMany({
-                where: { userId },
+                where,
                 orderBy: { createdAt: 'desc' },
                 skip,
                 take: limit,
             }),
-            prisma.email.count({ where: { userId } }),
+            prisma.email.count({ where }),
         ]);
 
         res.json({
@@ -170,3 +189,154 @@ export const getJobStatus = async (req: Request, res: Response): Promise<void> =
         });
     }
 };
+
+export const batchScheduleEmail = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const userId = req.user?.id;
+        const { recipients, subject, body, html, scheduledAt } = req.body;
+
+        if (!userId) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
+
+        if (!recipients || !Array.isArray(recipients) || recipients.length === 0 || !subject || !body || !scheduledAt) {
+            res.status(400).json({
+                error: 'Missing required fields or invalid recipients list',
+            });
+            return;
+        }
+
+        const scheduledDate = new Date(scheduledAt);
+        const jobs = [];
+
+        const delaySeconds = req.body.delaySeconds || 0;
+        const hourlyLimit = req.body.hourlyLimit || 0;
+
+        // Calculate effective delay (minimum spacing between emails to respect hourly limit)
+        // If hourlyLimit is 100, then min spacing is 3600 / 100 = 36 seconds.
+        // We take the MAX of user-defined delay and valid hourly-limit delay.
+        let effectiveDelayMs = delaySeconds * 1000;
+
+        if (hourlyLimit > 0) {
+            const minSpacingMs = (3600 / hourlyLimit) * 1000;
+            if (minSpacingMs > effectiveDelayMs) {
+                effectiveDelayMs = minSpacingMs;
+            }
+        }
+
+        for (let i = 0; i < recipients.length; i++) {
+            const to = recipients[i];
+            const jobId = `${userId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+            // Calculate individual schedule time
+            const jobScheduledDate = new Date(scheduledDate.getTime() + (i * effectiveDelayMs));
+
+            // Create database entry
+            await prisma.email.create({
+                data: {
+                    id: jobId,
+                    userId,
+                    to,
+                    subject,
+                    body,
+                    html,
+                    scheduledAt: jobScheduledDate,
+                    status: 'pending',
+                    jobId: jobId
+                }
+            });
+
+            // Add to queue
+            jobs.push(addEmailJob({
+                id: jobId,
+                to,
+                subject,
+                body,
+                html,
+                scheduledAt: jobScheduledDate,
+                userId,
+            }));
+        }
+
+        await Promise.all(jobs);
+
+        res.status(201).json({
+            success: true,
+            message: `Scheduled ${jobs.length} emails successfully`,
+        });
+    } catch (error) {
+        logger.error('Failed to batch schedule emails', {
+            error: error instanceof Error ? error.message : 'Unknown error',
+        });
+        res.status(500).json({
+            error: 'Failed to batch schedule emails',
+        });
+    }
+};
+
+export const toggleStar = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const userId = req.user?.id;
+        const { id } = req.params;
+
+        if (!userId) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
+
+        const email = await prisma.email.findUnique({
+            where: { id, userId },
+        });
+
+        if (!email) {
+            res.status(404).json({ error: 'Email not found' });
+            return;
+        }
+
+        const updatedEmail = await prisma.email.update({
+            where: { id },
+            data: { isStarred: !(email.isStarred || false) },
+        });
+
+        res.json({ success: true, isStarred: updatedEmail.isStarred });
+    } catch (error) {
+        logger.error('Failed to toggle star', {
+            error: error instanceof Error ? error.message : 'Unknown error',
+        });
+        res.status(500).json({ error: 'Failed to toggle star' });
+    }
+};
+
+// Get single email by ID
+export const getEmailById = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const userId = req.user?.id;
+
+        if (!userId) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
+
+        const email = await prisma.email.findFirst({
+            where: {
+                id,
+                userId
+            }
+        });
+
+        if (!email) {
+            res.status(404).json({ error: 'Email not found' });
+            return;
+        }
+
+        res.json(email);
+    } catch (error) {
+        logger.error('Error fetching email:', {
+            error: error instanceof Error ? error.message : 'Unknown error'
+        });
+        res.status(500).json({ error: 'Failed to fetch email' });
+    }
+};
+

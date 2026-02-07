@@ -43,6 +43,8 @@ export async function scheduleEmail(params: ScheduleEmailParams): Promise<{ succ
 interface GetEmailsParams {
   page?: number;
   limit?: number;
+  status?: string;
+  search?: string;
 }
 
 export async function getEmails(params: GetEmailsParams = {}): Promise<{
@@ -81,6 +83,16 @@ export async function getJobStatus(jobId: string): Promise<{
 
 export async function checkHealth(): Promise<{ status: string; service: string }> {
   const response = await apiClient.get('/auth/health');
+  return response.data;
+}
+
+export async function toggleStar(emailId: string): Promise<{ success: boolean; isStarred: boolean }> {
+  const response = await apiClient.put(`/email/${emailId}/star`);
+  return response.data;
+}
+
+export async function updateProfile(data: { name?: string; avatar?: string }): Promise<{ success: boolean; user: any }> {
+  const response = await apiClient.put('/auth/profile', data);
   return response.data;
 }
 

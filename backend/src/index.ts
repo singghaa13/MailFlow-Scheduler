@@ -7,10 +7,16 @@ import { emailService } from './services/email.service';
 import { SocketService } from './services/socket.service';
 import { QueueListenerService } from './services/queue-listener.service';
 import { createServer } from 'http';
+import { templateRoutes } from './api/template.routes';
+import { analyticsRoutes } from './api/analytics.routes';
 
 // Create HTTP server from Express app
 const httpServer = createServer(app);
 let server: ReturnType<typeof httpServer.listen>;
+
+// Register routes
+app.use('/api/templates', templateRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 async function start(): Promise<void> {
   try {
