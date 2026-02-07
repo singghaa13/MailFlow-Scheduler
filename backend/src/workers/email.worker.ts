@@ -6,12 +6,23 @@ import { emailService } from '../services/email.service';
 import { prisma } from '../db/prisma';
 import type { EmailJob } from '../queues/email.queue';
 
-const redisUrl = new URL(env.redis.url);
-const redis = {
-  host: redisUrl.hostname || env.redis.host || 'localhost',
-  port: parseInt(redisUrl.port || env.redis.port.toString() || '6379'),
-  password: redisUrl.password || env.redis.password,
-};
+let redis: { host: string; port: number; password?: string };
+
+try {
+  const redisUrl = new URL(env.redis.url);
+  redis = {
+    host: redisUrl.hostname || env.redis.host || 'localhost',
+    port: parseInt(redisUrl.port || env.redis.port.toString() || '6379'),
+    password: redisUrl.password || env.redis.password,
+  };
+} catch (error) {
+  // Fallback to individual env variables if URL parsing fails
+  redis = {
+    host: env.redis.host || 'localhost',
+    port: env.redis.port || 6379,
+    password: env.redis.password,
+  };
+}
 
 export class EmailWorker {
   private worker: Worker<EmailJob>;
