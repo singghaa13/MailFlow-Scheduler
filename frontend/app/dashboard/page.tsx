@@ -7,14 +7,6 @@ import { useAuth } from '@/context/auth-context';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Star, Clock, CheckCircle } from 'lucide-react';
 
-interface QueueStats {
-  waiting: number;
-  active: number;
-  completed: number;
-  failed: number;
-  delayed: number;
-}
-
 export default function Dashboard(): React.ReactElement {
   const { token, loading: authLoading } = useAuth();
   const [emails, setEmails] = useState<any[]>([]);
