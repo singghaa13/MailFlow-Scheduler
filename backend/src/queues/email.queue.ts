@@ -13,9 +13,11 @@ export interface EmailJob {
   userId: string;
 }
 
+const redisUrl = new URL(env.redis.url);
 const redis = {
-  host: new URL(env.redis.url).hostname || 'localhost',
-  port: parseInt(new URL(env.redis.url).port || '6379'),
+  host: redisUrl.hostname || env.redis.host || 'localhost',
+  port: parseInt(redisUrl.port || env.redis.port.toString() || '6379'),
+  password: redisUrl.password || env.redis.password,
 };
 
 export const emailQueue = new Queue<EmailJob>(env.bullMq.queueName, {
