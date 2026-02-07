@@ -17,11 +17,14 @@ export class EmailService {
     this.transporter = nodemailer.createTransport({
       host: env.email.smtpHost,
       port: env.email.smtpPort,
-      secure: false,
+      secure: env.email.smtpPort === 465, // true for 465, false for others
       auth: {
         user: env.email.smtpUser,
         pass: env.email.smtpPass,
       },
+      tls: {
+        rejectUnauthorized: false // Helps with self-signed certs or proxy issues
+      }
     });
   }
 
