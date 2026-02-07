@@ -1,12 +1,12 @@
 [phases.setup]
 nixPkgs = ["nodejs-20_x"]
-aptPkgs = ["openssl", "libssl1.1"]
+aptPkgs = ["openssl", "libssl-dev", "ca-certificates"]
 
 [phases.install]
 cmds = ["npm ci"]
 
 [phases.build]
-cmds = ["npx prisma generate --generator client", "npm run build"]
+cmds = ["npx prisma generate", "npm run build"]
 
 [start]
 cmd = "npx prisma db push --accept-data-loss && node dist/index.js"
