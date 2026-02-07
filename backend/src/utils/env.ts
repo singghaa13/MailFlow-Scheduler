@@ -19,6 +19,7 @@ export const env = {
   server: {
     port: parseInt(process.env.PORT || '3000', 10),
     nodeEnv: process.env.NODE_ENV || 'development',
+    apiUrl: process.env.API_URL || 'http://localhost:3000',
   },
   email: {
     smtpHost: process.env.SMTP_HOST || 'smtp.ethereal.email',

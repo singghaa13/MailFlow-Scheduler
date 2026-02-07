@@ -10,6 +10,7 @@ import { passport } from './config/passport';
 const app = express();
 
 // Middleware
+app.set('trust proxy', 1); // Trust first proxy (Railway load balancer)
 app.use(cors());
 app.use(express.json());
 app.use(passport.initialize());
