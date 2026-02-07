@@ -10,13 +10,22 @@ let redis: { host: string; port: number; password?: string };
 
 try {
   const redisUrl = new URL(env.redis.url);
+  // Extract password from URL (format: redis://username:password@host:port)
+  const password = redisUrl.password || env.redis.password;
   redis = {
-    host: redisUrl.hostname || env.redis.host || 'localhost',
-    port: parseInt(redisUrl.port || env.redis.port.toString() || '6379'),
-    password: redisUrl.password || env.redis.password,
+    host: redisUrl.hostname,
+    port: parseInt(redisUrl.port),
+    password: password,
   };
+  logger.info('Redis config for BullMQ worker', {
+    url: env.redis.url.replace(/:([^:@]+)@/, ':****@'), // Mask password in logs
+    host: redis.host,
+    port: redis.port,
+    hasPassword: !!redis.password
+  });
 } catch (error) {
   // Fallback to individual env variables if URL parsing fails
+  logger.error('Failed to parse REDIS_URL, using fallback', { error });
   redis = {
     host: env.redis.host || 'localhost',
     port: env.redis.port || 6379,
