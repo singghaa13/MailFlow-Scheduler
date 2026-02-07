@@ -1,0 +1,3 @@
+# Railway ignore file
+.git
+node_modules
