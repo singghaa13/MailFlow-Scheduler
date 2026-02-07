@@ -116,9 +116,7 @@ export default function LoginPage() {
                     </p>
                 </div>
             </div>
-            <div className="mt-4 text-xs text-gray-400 text-center">
-                Backend: {process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'}
-            </div>
+
         </div>
     );
 }

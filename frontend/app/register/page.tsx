@@ -137,9 +137,7 @@ export default function RegisterPage() {
                         )}
                     </button>
                 </form>
-                <div className="mt-4 text-xs text-gray-400 text-center">
-                    Backend: {API_URL}
-                </div>
+
             </div>
         </div>
     );
