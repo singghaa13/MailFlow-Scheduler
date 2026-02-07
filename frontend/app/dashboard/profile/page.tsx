@@ -11,6 +11,8 @@ const AVATAR_COLORS = [
     '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B739', '#52B788'
 ];
 
+export const dynamic = 'force-dynamic';
+
 export default function ProfilePage() {
     const { user, refreshUser } = useAuth();
     const router = useRouter();

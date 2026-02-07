@@ -7,6 +7,8 @@ import { useAuth } from '@/context/auth-context';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Star, Clock, CheckCircle } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 export default function Dashboard(): React.ReactElement {
   const { token, loading: authLoading } = useAuth();
   const [emails, setEmails] = useState<any[]>([]);

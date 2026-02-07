@@ -6,6 +6,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../../../context/auth-context';
 import axios from 'axios';
 
+export const dynamic = 'force-dynamic';
+
 export default function LoginSuccess() {
     const router = useRouter();
     const searchParams = useSearchParams();
