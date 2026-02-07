@@ -1,3 +1,4 @@
+console.log('EmailWorker module loading...');
 import { Worker, Job } from 'bullmq';
 import IORedis from 'ioredis';
 import { env } from '../utils/env';

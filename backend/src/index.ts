@@ -1,3 +1,4 @@
+console.log('App starting: Loading modules...');
 import { app } from './app';
 import { env } from './utils/env';
 import { logger } from './utils/logger';
