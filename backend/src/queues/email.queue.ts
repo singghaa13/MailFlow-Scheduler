@@ -38,10 +38,7 @@ try {
     port: env.redis.port || 6379,
     password: env.redis.password,
   };
-}
-}
-
-export const emailQueue = new Queue<EmailJob>(env.bullMq.queueName, {
+}\r\n\r\nexport const emailQueue = new Queue<EmailJob>(env.bullMq.queueName, {
   connection: redis,
 });
 
@@ -120,3 +117,4 @@ export async function closeQueue(): Promise<void> {
     });
   }
 }
+
