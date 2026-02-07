@@ -31,6 +31,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     useEffect(() => {
         const checkAuth = async () => {
+            if (typeof window === 'undefined') {
+                setLoading(false);
+                return;
+            }
             const storedToken = localStorage.getItem('token');
             if (storedToken) {
                 setToken(storedToken);
@@ -54,20 +58,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }, []);
 
     const login = (newToken: string, userData: User) => {
-        localStorage.setItem('token', newToken);
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('token', newToken);
+        }
         setToken(newToken);
         setUser(userData);
         router.push('/dashboard');
     };
 
     const logout = () => {
-        localStorage.removeItem('token');
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem('token');
+        }
         setToken(null);
         setUser(null);
         router.push('/login');
     };
 
     const refreshUser = async () => {
+        if (typeof window === 'undefined') return;
         const storedToken = localStorage.getItem('token');
         if (storedToken) {
             try {
