@@ -38,7 +38,7 @@ export const getDailyStats = async (req: Request, res: Response): Promise<void> 
             statsMap.set(dateStr, { sent: 0, failed: 0, pending: 0 });
         }
 
-        emails.forEach((email) => {
+        emails.forEach((email: { status: string; createdAt: Date }) => {
             const dateStr = email.createdAt.toISOString().split('T')[0];
             if (statsMap.has(dateStr)) {
                 const dayStats = statsMap.get(dateStr)!;
