@@ -25,7 +25,12 @@ async function start(): Promise<void> {
     logger.info('Initializing services...');
 
     await rateLimiterService.connect();
-    await emailService.verifyConnection();
+    // Verify email connection in background to avoid blocking startup
+    emailService.verifyConnection().catch((error) => {
+      logger.error('Email service verification failed', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    });
     await emailWorker.start();
 
     // Initialize Socket.IO
