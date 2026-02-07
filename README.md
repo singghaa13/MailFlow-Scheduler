@@ -70,11 +70,15 @@ MailFlow-Scheduler/
    PORT=3000
    NODE_ENV=development
    
-   # SMTP (Ethereal Email)
-   SMTP_HOST=smtp.ethereal.email
-   SMTP_PORT=587
-   SMTP_USER=your_ethereal_email
-   SMTP_PASS=your_ethereal_password
+   # URLs (Important for CORS and Redirects)
+   API_URL=http://localhost:3000
+   CLIENT_URL=http://localhost:3001
+
+   # SMTP (Gmail Recommended for Production)
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=465
+   SMTP_USER=your_gmail@gmail.com
+   SMTP_PASS=your_app_password
    
    # Google OAuth
    GOOGLE_CLIENT_ID=your_google_client_id
@@ -103,6 +107,49 @@ MailFlow-Scheduler/
    - Frontend: http://localhost:3001
    - Backend API: http://localhost:3000/api
    - Health Check: http://localhost:3000/health
+
+## 🚀 Deployment (Railway)
+
+### Prerequisites
+- GitHub Account
+- Railway Account
+- Google Cloud Console Project (for OAuth)
+
+### Steps
+1.  **Fork the Repository** to your GitHub.
+2.  **Create a New Project on Railway**.
+3.  **Deploy Backend Service**:
+    -   Connect your GitHub repo.
+    -   Select `/backend` as the Root Directory.
+    -   Add Variables:
+        -   `DATABASE_URL`: Add a PostgreSQL service in Railway and link it (`${{Postgres.DATABASE_URL}}`).
+        -   `REDIS_URL`: Add a Redis service in Railway and link it (`${{Redis.REDIS_URL}}`).
+        -   `API_URL`: `https://<your-backend-url>.up.railway.app`
+        -   `CLIENT_URL`: `https://<your-frontend-url>.up.railway.app`
+        -   `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` (Use Gmail App Password for production).
+        -   `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`.
+        -   `JWT_SECRET`.
+    -   **Start Command**: `node dist/index.js`
+    -   **Build Command**: `npm ci && npx prisma generate && npm run build`
+
+4.  **Deploy Frontend Service**:
+    -   Connect the same GitHub repo.
+    -   Select `/frontend` as the Root Directory.
+    -   Add Variables:
+        -   `NEXT_PUBLIC_API_URL`: `https://<your-backend-url>.up.railway.app/api`
+    -   **Build Command**: `npm install && npm run build`
+    -   **Start Command**: `npm start`
+
+5.  **Google OAuth Configuration**:
+    -   Go to Google Cloud Console.
+    -   Add **Authorized Redirect URI**: `https://<your-backend-url>.up.railway.app/api/auth/google/callback`
+
+### Production SMTP (Gmail/Resend)
+For reliable delivery (avoiding "Pending" or "Failed" states), use a real provider instead of Ethereal:
+-   **Gmail**: Use App Passwords (Security > 2-Step Verification > App Passwords).
+    -   Host: `smtp.gmail.com`
+    -   Port: `465` (Secure) or `587`
+-   **Resend/SendGrid**: Use their provided credentials.
 
 ### Local Development
 
