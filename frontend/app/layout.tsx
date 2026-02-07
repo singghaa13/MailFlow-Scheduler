@@ -1,7 +1,8 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
-title: 'MailFlow Scheduler',
+export const metadata: Metadata = {
+  title: 'MailFlow Scheduler',
   description: 'Schedule and manage your emails efficiently',
 };
 
