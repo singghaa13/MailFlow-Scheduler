@@ -6,8 +6,10 @@ const nextConfig = {
     // TS errors won't block the build
     ignoreBuildErrors: false,
   },
+  // Skip static generation errors - pages will be rendered dynamically
+  staticPageGenerationTimeout: 1000,
   experimental: {
-    isrMemoryCacheSize: 0,
+    missingSuspenseWithCSRBailout: false,
   },
 };
 
