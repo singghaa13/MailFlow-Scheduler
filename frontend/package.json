@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev -p 3001",
     "build": "next build",
-    "start": "node server.js",
+    "start": "node .next/standalone/server.js",
     "lint": "next lint"
   },
   "dependencies": {
@@ -19,6 +19,7 @@
     "react-dom": "^18.2.0",
     "recharts": "^3.7.0",
     "socket.io-client": "^4.8.3",
+    "sharp": "^0.33.2",
     "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
