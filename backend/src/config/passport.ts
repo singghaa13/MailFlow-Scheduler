@@ -24,11 +24,13 @@ passport.use(
                 }
 
                 // Find or create user
+                console.log('Google Auth: Searching for user with email:', email);
                 let user = await prisma.user.findUnique({
                     where: { email },
                 });
 
                 if (!user) {
+                    console.log('Google Auth: Creating new user');
                     // Create new user (password is optional now)
                     user = await prisma.user.create({
                         data: {
@@ -40,6 +42,7 @@ passport.use(
                         }
                     });
                 } else {
+                    console.log('Google Auth: Updating existing user');
                     // Update existing user with googleId if missing
                     if (!user.googleId) {
                         user = await prisma.user.update({
@@ -51,6 +54,7 @@ passport.use(
 
                 return done(null, user);
             } catch (error) {
+                console.error('Google Auth Strategy Error:', error);
                 return done(error as Error, undefined);
             }
         }
