@@ -1,4 +1,5 @@
 import { QueueEvents } from 'bullmq';
+import IORedis from 'ioredis';
 import { env } from '../utils/env';
 import { logger } from '../utils/logger';
 import { SocketService } from './socket.service';
@@ -9,12 +10,20 @@ export class QueueListenerService {
 
     constructor(socketService: SocketService) {
         this.socketService = socketService;
+        const connection = new IORedis(env.redis.url, {
+            maxRetriesPerRequest: null,
+        });
+
+        connection.on('error', (err) => {
+            logger.error('Redis connection error in QueueListenerService:', { error: err.message });
+        });
+
+        connection.on('connect', () => {
+            logger.info('QueueListenerService connected to Redis');
+        });
+
         this.queueEvents = new QueueEvents('email-queue', {
-            connection: {
-                host: env.redis.host,
-                port: env.redis.port,
-                password: env.redis.password,
-            },
+            connection,
         });
 
         this.initializeListeners();
