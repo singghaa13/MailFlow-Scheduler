@@ -1,9 +1,14 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
-export const metadata: Metadata = {
-  title: 'MailFlow Scheduler',
+title: 'MailFlow Scheduler',
   description: 'Schedule and manage your emails efficiently',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 import { AuthProvider } from '../context/auth-context';
