@@ -38,7 +38,9 @@ try {
     port: env.redis.port || 6379,
     password: env.redis.password,
   };
-}\r\n\r\nexport const emailQueue = new Queue<EmailJob>(env.bullMq.queueName, {
+}
+
+export const emailQueue = new Queue<EmailJob>(env.bullMq.queueName, {
   connection: redis,
 });
 
