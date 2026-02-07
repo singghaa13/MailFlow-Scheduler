@@ -11,7 +11,10 @@ const app = express();
 
 // Middleware
 app.set('trust proxy', 1); // Trust first proxy (Railway load balancer)
-app.use(cors());
+app.use(cors({
+  origin: env.client.url,
+  credentials: true
+}));
 app.use(express.json());
 app.use(passport.initialize());
 

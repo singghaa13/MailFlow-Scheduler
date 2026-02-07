@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../db/prisma';
 import { logger } from '../utils/logger';
+import { env } from '../utils/env';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-change-me';
 
@@ -169,7 +170,7 @@ export const googleCallback = async (req: Request, res: Response): Promise<void>
     try {
         const user = req.user as any;
         if (!user) {
-            res.redirect('http://localhost:3001/login?error=auth_failed');
+            res.redirect(`${env.client.url}/login?error=auth_failed`);
             return;
         }
 
@@ -178,12 +179,12 @@ export const googleCallback = async (req: Request, res: Response): Promise<void>
         });
 
         // Redirect to frontend with token
-        res.redirect(`http://localhost:3001/login/success?token=${token}`);
+        res.redirect(`${env.client.url}/login/success?token=${token}`);
 
     } catch (error) {
         logger.error('Google callback error', {
             error: error instanceof Error ? error.message : 'Unknown error',
         });
-        res.redirect('http://localhost:3001/login?error=server_error');
+        res.redirect(`${env.client.url}/login?error=server_error`);
     }
 };

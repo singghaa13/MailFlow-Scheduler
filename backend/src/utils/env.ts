@@ -35,4 +35,7 @@ export const env = {
     concurrency: parseInt(process.env.QUEUE_CONCURRENCY || '5', 10),
     queueName: process.env.QUEUE_NAME || 'email_jobs',
   },
+  client: {
+    url: process.env.CLIENT_URL || 'http://localhost:3001',
+  },
 };
