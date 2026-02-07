@@ -102,7 +102,19 @@ export default function DashboardLayout({
                     >
                         <Send size={18} />
                         Sent
+                        Sent
                         {/* <span className="ml-auto text-xs text-gray-400">785</span> */}
+                    </Link>
+
+                    <Link
+                        href="/dashboard?view=failed"
+                        className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-r-full mr-2 transition-colors ${currentView === 'failed'
+                            ? 'bg-red-50 text-red-600'
+                            : 'text-gray-600 hover:bg-gray-50'
+                            }`}
+                    >
+                        <div className="h-[18px] w-[18px] flex items-center justify-center">⚠️</div>
+                        Failed
                     </Link>
                 </nav>
 

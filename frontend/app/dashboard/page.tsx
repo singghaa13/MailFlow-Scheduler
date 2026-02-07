@@ -32,7 +32,7 @@ export default function Dashboard(): React.ReactElement {
         getQueueStats(),
         getEmails({
           limit: 50,
-          status: activeTab === 'scheduled' ? 'pending' : activeTab === 'sent' ? 'sent' : 'completed',
+          status: searchParams.get('status') || (activeTab === 'scheduled' ? 'pending' : activeTab === 'sent' ? 'sent' : 'failed'),
           search: searchQuery || undefined
         })
       ]);
