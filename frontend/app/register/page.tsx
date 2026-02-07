@@ -29,10 +29,15 @@ export default function RegisterPage() {
             const { token, user } = response.data;
             login(token, user);
         } catch (err: any) {
-            setError(err.response?.data?.error || 'Registration failed');
+            console.error(err);
+            const errorMessage = err.response?.data?.error || err.message || 'Registration failed';
+            setError(errorMessage);
             setIsLoading(false);
         }
     };
+
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+    console.log('Connecting to:', API_URL);
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
@@ -132,6 +137,9 @@ export default function RegisterPage() {
                         )}
                     </button>
                 </form>
+                <div className="mt-4 text-xs text-gray-400 text-center">
+                    Backend: {API_URL}
+                </div>
             </div>
         </div>
     );

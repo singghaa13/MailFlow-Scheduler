@@ -36,6 +36,6 @@ export const env = {
     queueName: process.env.QUEUE_NAME || 'email_jobs',
   },
   client: {
-    url: process.env.CLIENT_URL || 'http://localhost:3001',
+    url: (process.env.CLIENT_URL || 'http://localhost:3001').replace(/\/$/, ''),
   },
 };
