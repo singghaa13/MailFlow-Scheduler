@@ -14,10 +14,19 @@ export class EmailService {
 
   constructor() {
     // TODO: Implement transporter initialization with environment variables
+    // Gmail specific optimization: Force 465 if using Gmail
+    const isGmail = env.email.smtpHost.includes('gmail');
+    const port = isGmail ? 465 : env.email.smtpPort;
+    const secure = port === 465;
+
+    if (isGmail && env.email.smtpPort !== 465) {
+      logger.info('Detected Gmail with non-465 port, switching to 465 (SSL) for reliability');
+    }
+
     this.transporter = nodemailer.createTransport({
       host: env.email.smtpHost,
-      port: env.email.smtpPort,
-      secure: env.email.smtpPort === 465, // true for 465, false for others
+      port: port,
+      secure: secure,
       auth: {
         user: env.email.smtpUser,
         pass: env.email.smtpPass,
