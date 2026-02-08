@@ -13,23 +13,12 @@ export class EmailService {
   private transporter: nodemailer.Transporter;
 
   constructor() {
-    // TODO: Implement transporter initialization with environment variables
-    // Gmail specific optimization: Use service shorthand if available
-    const isGmail = env.email.smtpHost.includes('gmail');
-
-    // Minimal configuration for Gmail to rule out option conflicts
-    const transportConfig = isGmail ? {
-      service: 'gmail',
-      auth: {
-        user: env.email.smtpUser,
-        pass: env.email.smtpPass,
-      },
-      debug: true,
-      logger: true
-    } : {
-      host: env.email.smtpHost,
-      port: env.email.smtpPort,
-      secure: env.email.smtpPort === 465,
+    // Explicitly configure for Gmail SSL (465) + IPv4
+    // This avoids "service: gmail" unpredictability and forces a specific, robust connection path.
+    const transportConfig = {
+      host: env.email.smtpHost, // Should be smtp.gmail.com
+      port: 465, // Force SSL port
+      secure: true, // Force SSL
       auth: {
         user: env.email.smtpUser,
         pass: env.email.smtpPass,
@@ -37,15 +26,19 @@ export class EmailService {
       tls: {
         rejectUnauthorized: false
       },
+      connectionTimeout: 10000,
+      greetingTimeout: 5000,
+      socketTimeout: 30000,
+      dnsTimeout: 5000,
+      family: 4, // Force IPv4
       debug: true,
       logger: true
     };
 
-    logger.info('Initializing email transport', {
-      isGmail,
-      service: isGmail ? 'gmail' : undefined,
-      host: isGmail ? undefined : env.email.smtpHost,
-      port: isGmail ? undefined : env.email.smtpPort,
+    logger.info('Initializing email transport with strict SSL/IPv4 config', {
+      host: transportConfig.host,
+      port: transportConfig.port,
+      secure: transportConfig.secure,
     });
 
     this.transporter = nodemailer.createTransport(transportConfig as any);
