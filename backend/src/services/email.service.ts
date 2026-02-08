@@ -49,7 +49,7 @@ export class EmailService {
         to: payload.to,
         subject: payload.subject,
       });
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error(`Failed to send email: ${errorMessage}`, {
