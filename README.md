@@ -74,11 +74,9 @@ MailFlow-Scheduler/
    API_URL=http://localhost:3000
    CLIENT_URL=http://localhost:3001
 
-   # SMTP (Gmail Recommended for Production)
-   SMTP_HOST=smtp.gmail.com
-   SMTP_PORT=465
-   SMTP_USER=your_gmail@gmail.com
-   SMTP_PASS=your_app_password
+   # Email Service (Resend)
+   RESEND_API_KEY=re_123456789
+   EMAIL_FROM=onboarding@resend.dev
    
    # Google OAuth
    GOOGLE_CLIENT_ID=your_google_client_id
@@ -126,7 +124,8 @@ MailFlow-Scheduler/
         -   `REDIS_URL`: Add a Redis service in Railway and link it (`${{Redis.REDIS_URL}}`).
         -   `API_URL`: `https://<your-backend-url>.up.railway.app`
         -   `CLIENT_URL`: `https://<your-frontend-url>.up.railway.app`
-        -   `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` (Use Gmail App Password for production).
+        -   `RESEND_API_KEY`: Get from [Resend](https://resend.com).
+        -   `EMAIL_FROM`: Optional (defaults to `onboarding@resend.dev` if not using a custom domain).
         -   `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`.
         -   `JWT_SECRET`.
     -   **Start Command**: `node dist/index.js`
@@ -144,12 +143,10 @@ MailFlow-Scheduler/
     -   Go to Google Cloud Console.
     -   Add **Authorized Redirect URI**: `https://<your-backend-url>.up.railway.app/api/auth/google/callback`
 
-### Production SMTP (Gmail/Resend)
-For reliable delivery (avoiding "Pending" or "Failed" states), use a real provider instead of Ethereal:
--   **Gmail**: Use App Passwords (Security > 2-Step Verification > App Passwords).
-    -   Host: `smtp.gmail.com`
-    -   Port: `465` (Secure) or `587`
--   **Resend/SendGrid**: Use their provided credentials.
+### Email Service (Resend)
+This project uses **Resend** for reliable email delivery.
+-   **API Key**: Required (`RESEND_API_KEY`).
+-   **From Address**: Configurable (`EMAIL_FROM`), or uses Resend's testing domain by default.
 
 ### Local Development
 
