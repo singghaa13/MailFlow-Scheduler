@@ -61,9 +61,10 @@ export class EmailWorker {
         data: { status: 'failed' },
       });
 
-      logger.error('Email job processing failed', {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error(`Email job processing failed: ${errorMessage}`, {
         jobId: job.id,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: errorMessage,
       });
       throw error;
     }

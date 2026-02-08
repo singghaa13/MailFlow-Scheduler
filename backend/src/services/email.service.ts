@@ -49,11 +49,13 @@ export class EmailService {
         to: payload.to,
         subject: payload.subject,
       });
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     } catch (error) {
-      logger.error('Failed to send email', {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error(`Failed to send email: ${errorMessage}`, {
         to: payload.to,
         subject: payload.subject,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: errorMessage,
       });
       throw error;
     }
@@ -65,8 +67,9 @@ export class EmailService {
       logger.info('Email service verified successfully');
       return true;
     } catch (error) {
-      logger.error('Email service verification failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error(`Email service verification failed: ${errorMessage}`, {
+        error: errorMessage,
       });
       return false;
     }
