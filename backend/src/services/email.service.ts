@@ -14,19 +14,10 @@ export class EmailService {
 
   constructor() {
     // TODO: Implement transporter initialization with environment variables
-    // Gmail specific optimization: Force 465 if using Gmail
-    const isGmail = env.email.smtpHost.includes('gmail');
-    const port = isGmail ? 465 : env.email.smtpPort;
-    const secure = port === 465;
-
-    if (isGmail && env.email.smtpPort !== 465) {
-      logger.info('Detected Gmail with non-465 port, switching to 465 (SSL) for reliability');
-    }
-
     this.transporter = nodemailer.createTransport({
       host: env.email.smtpHost,
-      port: port,
-      secure: secure,
+      port: env.email.smtpPort,
+      secure: env.email.smtpPort === 465,
       auth: {
         user: env.email.smtpUser,
         pass: env.email.smtpPass,
@@ -34,11 +25,13 @@ export class EmailService {
       tls: {
         rejectUnauthorized: false
       },
-      connectionTimeout: 10000, // 10 seconds to connect
-      greetingTimeout: 5000,    // 5 seconds to wait for greeting
-      socketTimeout: 30000,     // 30 seconds of inactivity
-      dnsTimeout: 5000,        // 5 seconds for DNS resolution
-      family: 4,               // Force IPv4 usage
+      connectionTimeout: 10000,
+      greetingTimeout: 5000,
+      socketTimeout: 30000,
+      dnsTimeout: 5000,
+      family: 4,
+      debug: true, // Show debug output
+      logger: true // Log to console
     } as any);
   }
 
