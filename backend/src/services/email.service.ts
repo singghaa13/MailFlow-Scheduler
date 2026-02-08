@@ -17,20 +17,13 @@ export class EmailService {
     // Gmail specific optimization: Use service shorthand if available
     const isGmail = env.email.smtpHost.includes('gmail');
 
+    // Minimal configuration for Gmail to rule out option conflicts
     const transportConfig = isGmail ? {
       service: 'gmail',
       auth: {
         user: env.email.smtpUser,
         pass: env.email.smtpPass,
       },
-      tls: {
-        rejectUnauthorized: false
-      },
-      connectionTimeout: 10000,
-      greetingTimeout: 5000,
-      socketTimeout: 30000,
-      dnsTimeout: 5000,
-      family: 4,
       debug: true,
       logger: true
     } : {
@@ -44,14 +37,16 @@ export class EmailService {
       tls: {
         rejectUnauthorized: false
       },
-      connectionTimeout: 10000,
-      greetingTimeout: 5000,
-      socketTimeout: 30000,
-      dnsTimeout: 5000,
-      family: 4,
       debug: true,
       logger: true
     };
+
+    logger.info('Initializing email transport', {
+      isGmail,
+      service: isGmail ? 'gmail' : undefined,
+      host: isGmail ? undefined : env.email.smtpHost,
+      port: isGmail ? undefined : env.email.smtpPort,
+    });
 
     this.transporter = nodemailer.createTransport(transportConfig as any);
   }
