@@ -14,7 +14,26 @@ export class EmailService {
 
   constructor() {
     // TODO: Implement transporter initialization with environment variables
-    this.transporter = nodemailer.createTransport({
+    // Gmail specific optimization: Use service shorthand if available
+    const isGmail = env.email.smtpHost.includes('gmail');
+
+    const transportConfig = isGmail ? {
+      service: 'gmail',
+      auth: {
+        user: env.email.smtpUser,
+        pass: env.email.smtpPass,
+      },
+      tls: {
+        rejectUnauthorized: false
+      },
+      connectionTimeout: 10000,
+      greetingTimeout: 5000,
+      socketTimeout: 30000,
+      dnsTimeout: 5000,
+      family: 4,
+      debug: true,
+      logger: true
+    } : {
       host: env.email.smtpHost,
       port: env.email.smtpPort,
       secure: env.email.smtpPort === 465,
@@ -30,9 +49,11 @@ export class EmailService {
       socketTimeout: 30000,
       dnsTimeout: 5000,
       family: 4,
-      debug: true, // Show debug output
-      logger: true // Log to console
-    } as any);
+      debug: true,
+      logger: true
+    };
+
+    this.transporter = nodemailer.createTransport(transportConfig as any);
   }
 
   async sendEmail(payload: EmailPayload): Promise<void> {
