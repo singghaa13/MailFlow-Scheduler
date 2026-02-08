@@ -23,9 +23,14 @@ export class EmailService {
         pass: env.email.smtpPass,
       },
       tls: {
-        rejectUnauthorized: false // Helps with self-signed certs or proxy issues
-      }
-    });
+        rejectUnauthorized: false
+      },
+      connectionTimeout: 10000, // 10 seconds to connect
+      greetingTimeout: 5000,    // 5 seconds to wait for greeting
+      socketTimeout: 30000,     // 30 seconds of inactivity
+      dnsTimeout: 5000,        // 5 seconds for DNS resolution
+      family: 4,               // Force IPv4 usage
+    } as any);
   }
 
   async sendEmail(payload: EmailPayload): Promise<void> {
