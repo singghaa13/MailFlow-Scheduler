@@ -22,10 +22,8 @@ export const env = {
     apiUrl: process.env.API_URL || 'http://localhost:3000',
   },
   email: {
-    smtpHost: process.env.SMTP_HOST || 'smtp.ethereal.email',
-    smtpPort: parseInt(process.env.SMTP_PORT || '587', 10),
-    smtpUser: process.env.SMTP_USER || '',
-    smtpPass: process.env.SMTP_PASS || '',
+    resendApiKey: process.env.RESEND_API_KEY || '',
+    from: process.env.EMAIL_FROM || 'onboarding@resend.dev',
   },
   rateLimiter: {
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '3600000', 10),

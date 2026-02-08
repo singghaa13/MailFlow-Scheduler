@@ -10,7 +10,6 @@ import { QueueListenerService } from './services/queue-listener.service';
 import { createServer } from 'http';
 import { templateRoutes } from './api/template.routes';
 import { analyticsRoutes } from './api/analytics.routes';
-import { runNetworkDiagnostics } from './utils/diagnose';
 
 // Create HTTP server from Express app
 const httpServer = createServer(app);
@@ -24,9 +23,6 @@ async function start(): Promise<void> {
   try {
     // Initialize services
     logger.info('Initializing services...');
-
-    // Run network diagnostics checks
-    await runNetworkDiagnostics();
 
     await rateLimiterService.connect();
     // Verify email connection in background to avoid blocking startup

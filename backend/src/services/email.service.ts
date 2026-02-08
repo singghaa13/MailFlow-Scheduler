@@ -1,4 +1,4 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import { env } from '../utils/env';
 import { logger } from '../utils/logger';
 
@@ -10,67 +10,39 @@ interface EmailPayload {
 }
 
 export class EmailService {
-  private transporter: nodemailer.Transporter;
+  private resend: Resend;
 
   constructor() {
-    // Explicitly configure for Gmail SSL (465) + IPv4
-    // This avoids "service: gmail" unpredictability and forces a specific, robust connection path.
-    const transportConfig = {
-      host: env.email.smtpHost, // Should be smtp.gmail.com
-      port: 465, // Force SSL port
-      secure: true, // Force SSL
-      auth: {
-        user: env.email.smtpUser,
-        pass: env.email.smtpPass,
-      },
-      tls: {
-        rejectUnauthorized: false
-      },
-      connectionTimeout: 10000,
-      greetingTimeout: 5000,
-      socketTimeout: 30000,
-      dnsTimeout: 5000,
-      family: 4, // Force IPv4
-      debug: true,
-      logger: true
-    };
-
-    logger.info('Initializing email transport with strict SSL/IPv4 config', {
-      host: transportConfig.host,
-      port: transportConfig.port,
-      secure: transportConfig.secure,
-    });
-
-    this.transporter = nodemailer.createTransport(transportConfig as any);
+    if (!env.email.resendApiKey) {
+      logger.warn('RESEND_API_KEY is not set. Email sending will fail.');
+    }
+    this.resend = new Resend(env.email.resendApiKey);
   }
 
   async sendEmail(payload: EmailPayload): Promise<void> {
     try {
-      logger.info(`Attempting to send email via ${env.email.smtpHost}:${env.email.smtpPort}`, {
+      logger.info('Attempting to send email via Resend', {
         to: payload.to,
         subject: payload.subject,
       });
 
-      // Create a promise with timeout
-      const sendPromise = this.transporter.sendMail({
-        from: env.email.smtpUser,
+      const { data, error } = await this.resend.emails.send({
+        from: env.email.from,
         to: payload.to,
         subject: payload.subject,
         text: payload.body,
         html: payload.html || payload.body,
       });
 
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Email sending timed out after 30s')), 30000)
-      );
+      if (error) {
+        throw new Error(`Resend API Error: ${error.message}`);
+      }
 
-      await Promise.race([sendPromise, timeoutPromise]);
-
-      logger.info('Email sent successfully', {
+      logger.info('Email sent successfully via Resend', {
         to: payload.to,
         subject: payload.subject,
+        id: data?.id,
       });
-
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error(`Failed to send email: ${errorMessage}`, {
@@ -82,18 +54,13 @@ export class EmailService {
     }
   }
 
-  async verifyConnection(): Promise<boolean> {
-    try {
-      await this.transporter.verify();
-      logger.info('Email service verified successfully');
-      return true;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      logger.error(`Email service verification failed: ${errorMessage}`, {
-        error: errorMessage,
-      });
-      return false;
+  async verifyConnection(): Promise<void> {
+    // Resend is stateless/API-based, so generally no persistent "connection" to verify.
+    // We could make a dummy API call, but typically we just trust the API key presence.
+    if (!env.email.resendApiKey) {
+      throw new Error('Resend API Key is missing');
     }
+    logger.info('Resend service initialized (stateless)');
   }
 }
 
