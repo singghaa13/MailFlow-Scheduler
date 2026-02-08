@@ -30,6 +30,11 @@ export class EmailService {
 
   async sendEmail(payload: EmailPayload): Promise<void> {
     try {
+      logger.info(`Attempting to send email via ${env.email.smtpHost}:${env.email.smtpPort}`, {
+        to: payload.to,
+        subject: payload.subject,
+      });
+
       // Create a promise with timeout
       const sendPromise = this.transporter.sendMail({
         from: env.email.smtpUser,
@@ -40,7 +45,7 @@ export class EmailService {
       });
 
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Email sending timed out after 10s')), 10000)
+        setTimeout(() => reject(new Error('Email sending timed out after 30s')), 30000)
       );
 
       await Promise.race([sendPromise, timeoutPromise]);
